@@ -1,0 +1,322 @@
+@import './variables.less';
+
+// Reset & Base
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
+    'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
+    'Noto Color Emoji';
+  font-size: @font-md;
+  line-height: 1.5;
+  color: @text-primary;
+  background-color: @bg-color;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+a {
+  color: @primary-color;
+  text-decoration: none;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+// Scrollbar
+::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+// App Container
+#app {
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+// Page Layout
+.page-container {
+  min-height: 100vh;
+  min-height: 100dvh;
+  background-color: @bg-color;
+  padding-bottom: calc(@tabbar-height + @spacing-base);
+  padding-bottom: calc(@tabbar-height + env(safe-area-inset-bottom, 0px) + @spacing-base);
+}
+
+.page-container--no-tabbar {
+  padding-bottom: @spacing-base;
+}
+
+// Card Styles
+.card {
+  background-color: @card-color;
+  border-radius: @radius-lg;
+  box-shadow: @shadow-sm;
+  overflow: hidden;
+}
+
+.card--flat {
+  box-shadow: none;
+}
+
+.card + .card {
+  margin-top: @spacing-md;
+}
+
+// Section Title
+.section-title {
+  font-size: @font-base;
+  font-weight: 600;
+  color: @text-primary;
+  padding: @spacing-base;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  &__action {
+    font-size: @font-sm;
+    font-weight: 400;
+    color: @text-hint;
+  }
+}
+
+// Button Styles
+.btn-intake {
+  background-color: @intake-color !important;
+  border-color: @intake-color !important;
+}
+
+.btn-output {
+  background-color: @output-color !important;
+  border-color: @output-color !important;
+}
+
+// Amount Display
+.amount-display {
+  font-size: @font-xxl;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+
+  &--intake {
+    color: @intake-color;
+  }
+
+  &--output {
+    color: @output-color;
+  }
+
+  &--balance {
+    color: @primary-color;
+  }
+
+  &__unit {
+    font-size: @font-sm;
+    font-weight: 400;
+    margin-left: 2px;
+  }
+}
+
+// Record Item
+.record-item {
+  display: flex;
+  align-items: center;
+  padding: @spacing-md @spacing-base;
+  background-color: @card-color;
+  border-bottom: 1px solid @divider-color;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &__icon {
+    width: 40px;
+    height: 40px;
+    border-radius: @radius-md;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+    margin-right: @spacing-md;
+
+    &--intake {
+      background-color: @intake-light;
+    }
+
+    &--output {
+      background-color: @output-light;
+    }
+  }
+
+  &__info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__name {
+    font-size: @font-md;
+    color: @text-primary;
+    font-weight: 500;
+  }
+
+  &__meta {
+    font-size: @font-sm;
+    color: @text-hint;
+    margin-top: 2px;
+  }
+
+  &__amount {
+    font-size: @font-lg;
+    font-weight: 600;
+    flex-shrink: 0;
+    margin-left: @spacing-md;
+
+    &--intake {
+      color: @intake-color;
+    }
+
+    &--output {
+      color: @output-color;
+    }
+  }
+}
+
+// Status Badge
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: @radius-round;
+  font-size: @font-xs;
+  font-weight: 500;
+
+  &--pending {
+    background-color: #FFF7E6;
+    color: #D48806;
+  }
+
+  &--confirmed {
+    background-color: #F0FFF0;
+    color: #389E0D;
+  }
+
+  &--deleted {
+    background-color: #FFF1F0;
+    color: #CF1322;
+  }
+}
+
+// Empty State
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: @spacing-xl @spacing-base;
+  color: @text-hint;
+
+  &__icon {
+    font-size: 64px;
+    margin-bottom: @spacing-base;
+    opacity: 0.5;
+  }
+
+  &__text {
+    font-size: @font-md;
+    text-align: center;
+  }
+}
+
+// Loading Skeleton
+.skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e8e8e8 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s infinite;
+  border-radius: @radius-sm;
+}
+
+@keyframes skeleton-loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+// Fade Animation
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+// Slide Animation
+.slide-right-enter-active,
+.slide-right-leave-active {
+  transition: all 0.3s ease;
+}
+
+.slide-right-enter-from {
+  transform: translateX(100%);
+  opacity: 0;
+}
+
+.slide-right-leave-to {
+  transform: translateX(-100%);
+  opacity: 0;
+}
+
+// Safe Area Padding
+.safe-area-bottom {
+  padding-bottom: @safe-area-bottom;
+}
+
+// Flex Utilities
+.flex {
+  display: flex;
+}
+
+.flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.flex-1 {
+  flex: 1;
+  min-width: 0;
+}
+
+// Spacing Utilities
+.mt-sm { margin-top: @spacing-sm; }
+.mt-md { margin-top: @spacing-md; }
+.mt-base { margin-top: @spacing-base; }
+.mb-sm { margin-bottom: @spacing-sm; }
+.mb-md { margin-bottom: @spacing-md; }
+.mb-base { margin-bottom: @spacing-base; }
+.px-base { padding-left: @spacing-base; padding-right: @spacing-base; }
+.py-base { padding-top: @spacing-base; padding-bottom: @spacing-base; }

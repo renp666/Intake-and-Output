@@ -1,0 +1,297 @@
+// 24小时出入量记录系统 - Prisma Schema
+// 24-hour Intake and Output Recording System
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+// 科室表
+model Department {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // 关联
+  users User[]
+  beds  Bed[]
+
+  @@map("departments")
+}
+
+// 用户表
+model User {
+  id           String    @id @default(cuid())
+  username     String    @unique
+  passwordHash String
+  role         String    @default("nurse") // nurse, admin
+  name         String
+  departmentId String?
+  isActive     Boolean   @default(true)
+  lastLoginAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  // 关联
+  department        Department?               @relation(fields: [departmentId], references: [id])
+  recordedRecords   IntakeOutputRecord[]      @relation("RecordedBy")
+  confirmedRecords  IntakeOutputRecord[]      @relation("ConfirmedBy")
+  deletedRecords    IntakeOutputRecord[]      @relation("DeletedBy")
+  changeLogs        RecordChangeLog[]
+  alertsRead        AlertRecord[]             @relation("ReadBy")
+  alertsHandled     AlertRecord[]             @relation("HandledBy")
+  alertThresholds   PatientAlertThreshold[]
+  shiftConfigs      ShiftConfig[]
+  operationLogs     OperationLog[]
+
+  @@index([departmentId])
+  @@index([role])
+  @@map("users")
+}
+
+// 病人表
+model Patient {
+  id                String    @id @default(cuid())
+  name              String
+  hospitalNumber    String    @unique
+  bedNumber         String?
+  height            Float?
+  weight            Float?
+  admissionDate     DateTime?
+  dischargeDate     DateTime?
+  attendingDoctor   String?
+  chargeNurse       String?
+  status            String    @default("active") // active, discharged
+  notes             String?
+  deviceFingerprint String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  // 关联
+  beds              Bed[]
+  records           IntakeOutputRecord[]
+  alertThresholds   PatientAlertThreshold[]
+  alertRecords      AlertRecord[]
+  operationLogs     OperationLog[]
+
+  @@index([status])
+  @@index([bedNumber])
+  @@map("patients")
+}
+
+// 床位表
+model Bed {
+  id         String   @id @default(cuid())
+  bedNumber  String   @unique
+  departmentId String
+  patientId  String?
+  qrcode     String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  // 关联
+  department Department @relation(fields: [departmentId], references: [id])
+  patient    Patient?   @relation(fields: [patientId], references: [id])
+
+  @@index([departmentId])
+  @@index([patientId])
+  @@map("beds")
+}
+
+// 预设项目表
+model PresetItem {
+  id         String   @id @default(cuid())
+  name       String
+  type       String   // intake, output
+  unit       String
+  permission String   @default("self") // self, nurse_only
+  isActive   Boolean  @default(true)
+  sortOrder  Int      @default(0)
+  isSystem   Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([type])
+  @@index([isActive])
+  @@index([sortOrder])
+  @@map("preset_items")
+}
+
+// 出入量记录表
+model IntakeOutputRecord {
+  id                String    @id @default(cuid())
+  patientId         String
+  hospitalNumber    String
+  bedNumber         String?
+  recordType        String    // intake, output
+  itemName          String
+  amount            Float
+  unit              String
+  description       String?   // bristol type etc.
+  recordTime        DateTime
+  confirmedAt       DateTime?
+  confirmedBy       String?
+  inputMethod       String    @default("manual") // manual, voice
+  recordedBy        String?   // 患者端无用户ID时为空
+  deviceFingerprint String?
+  notes             String?
+  isDeleted         Boolean   @default(false)
+  deletedAt         DateTime?
+  deletedBy         String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  // 关联
+  patient      Patient          @relation(fields: [patientId], references: [id])
+  recorder     User?            @relation("RecordedBy", fields: [recordedBy], references: [id])
+  confirmer    User?            @relation("ConfirmedBy", fields: [confirmedBy], references: [id])
+  deleter      User?            @relation("DeletedBy", fields: [deletedBy], references: [id])
+  changeLogs   RecordChangeLog[]
+
+  @@index([patientId])
+  @@index([hospitalNumber])
+  @@index([recordType])
+  @@index([recordTime])
+  @@index([isDeleted])
+  @@index([createdAt])
+  @@map("intake_output_records")
+}
+
+// 修改历史表
+model RecordChangeLog {
+  id          String   @id @default(cuid())
+  recordId    String
+  fieldName   String
+  oldValue    String?
+  newValue    String?
+  changedBy   String?  // 患者端操作时为空
+  changedAt   DateTime @default(now())
+  changeType  String   // create, update, delete, restore
+
+  // 关联
+  record IntakeOutputRecord @relation(fields: [recordId], references: [id])
+  user   User?              @relation(fields: [changedBy], references: [id])
+
+  @@index([recordId])
+  @@index([changedBy])
+  @@index([changedAt])
+  @@map("record_change_logs")
+}
+
+// 系统配置表
+model SystemConfig {
+  id           String   @id @default(cuid())
+  configKey    String   @unique
+  configValue  String
+  description  String?
+  updatedAt    DateTime @updatedAt
+
+  @@map("system_configs")
+}
+
+// 个性化阈值表
+model PatientAlertThreshold {
+  id              String   @id @default(cuid())
+  patientId       String
+  alertType       String
+  thresholdValue  Float
+  thresholdUnit   String
+  description     String?
+  createdBy       String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // 关联
+  patient Patient @relation(fields: [patientId], references: [id])
+  user    User    @relation(fields: [createdBy], references: [id])
+
+  @@unique([patientId, alertType])
+  @@index([patientId])
+  @@index([alertType])
+  @@map("patient_alert_thresholds")
+}
+
+// 预警记录表
+model AlertRecord {
+  id             String    @id @default(cuid())
+  patientId      String
+  hospitalNumber String
+  alertType      String
+  alertLevel     String    // warning, critical
+  thresholdValue Float
+  actualValue    Float
+  description    String?
+  isRead         Boolean   @default(false)
+  readBy         String?
+  readAt         DateTime?
+  handled        Boolean   @default(false)
+  handledBy      String?
+  handledAt      DateTime?
+  handleNotes    String?
+  createdAt      DateTime  @default(now())
+
+  // 关联
+  patient  Patient  @relation(fields: [patientId], references: [id])
+  reader   User?    @relation("ReadBy", fields: [readBy], references: [id])
+  handler  User?    @relation("HandledBy", fields: [handledBy], references: [id])
+
+  @@index([patientId])
+  @@index([hospitalNumber])
+  @@index([alertType])
+  @@index([alertLevel])
+  @@index([isRead])
+  @@index([handled])
+  @@index([createdAt])
+  @@map("alert_records")
+}
+
+// 班次配置表
+model ShiftConfig {
+  id         String   @id @default(cuid())
+  name       String
+  startTime  String   // HH:mm format
+  endTime    String   // HH:mm format
+  isDefault  Boolean  @default(false)
+  createdBy  String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  // 关联
+  user User @relation(fields: [createdBy], references: [id])
+
+  @@index([createdBy])
+  @@map("shift_configs")
+}
+
+// 操作日志表
+model OperationLog {
+  id                String   @id @default(cuid())
+  userId            String?  // 患者端操作时为空
+  patientId         String?
+  operationType     String
+  targetTable       String
+  targetId          String?
+  detail            String?
+  ipAddress         String?
+  deviceFingerprint String?
+  createdAt         DateTime @default(now())
+
+  // 关联
+  user    User?    @relation(fields: [userId], references: [id])
+  patient Patient? @relation(fields: [patientId], references: [id])
+
+  @@index([userId])
+  @@index([patientId])
+  @@index([operationType])
+  @@index([targetTable])
+  @@index([createdAt])
+  @@map("operation_logs")
+}

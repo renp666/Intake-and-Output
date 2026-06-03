@@ -1,0 +1,69 @@
+# Dependencies / 依赖包
+node_modules/
+.pnpm-store/
+
+# Build output / 构建输出目录
+dist/
+build/
+.output/
+
+# Database files / 数据库文件
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite3
+
+# Environment variables / 环境变量（含敏感信息，不上传）
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# IDE / 集成开发环境配置
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files / 操作系统生成的文件
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs / 日志文件
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Testing / 测试覆盖率报告
+coverage/
+.nyc_output/
+
+# Turbo / Turborepo 缓存
+.turbo/
+
+# Vite / Vite 本地配置
+*.local
+
+# TypeScript / TypeScript 构建信息
+*.tsbuildinfo
+
+# Prisma / Prisma 迁移文件（本地开发生成）
+packages/server/prisma/migrations/
+
+# Temporary files / 临时文件
+*.tmp
+*.temp
+
+#文档目录
+DOC
+# Lock files / 依赖锁定文件（如需追踪可注释以下行）
+# pnpm-lock.yaml
+# package-lock.json
+# yarn.lock

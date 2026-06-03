@@ -1,0 +1,29 @@
+{
+  "name": "intake-and-output",
+  "version": "1.0.0",
+  "private": true,
+  "description": "24小时出入量记录系统",
+  "scripts": {
+    "dev": "pnpm --filter server dev",
+    "dev:patient": "pnpm --filter patient-app dev",
+    "dev:nurse": "pnpm --filter nurse-app dev",
+    "dev:all": "concurrently \"pnpm dev\" \"pnpm dev:patient\" \"pnpm dev:nurse\"",
+    "build": "pnpm --filter patient-app build && pnpm --filter nurse-app build && pnpm --filter server build",
+    "build:server": "pnpm --filter server build",
+    "build:patient": "pnpm --filter patient-app build",
+    "build:nurse": "pnpm --filter nurse-app build",
+    "db:push": "pnpm --filter server db:push",
+    "db:seed": "pnpm --filter server db:seed",
+    "db:studio": "pnpm --filter server db:studio",
+    "lint": "pnpm -r lint",
+    "clean": "pnpm -r exec rm -rf node_modules dist .turbo"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2",
+    "typescript": "^5.8.3"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
+  }
+}
