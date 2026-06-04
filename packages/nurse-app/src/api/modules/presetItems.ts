@@ -50,6 +50,6 @@ export const presetItemsApi = {
   },
 
   toggle(id: number) {
-    return api.post(`/preset-items/${id}/toggle`)
+    return api.put(`/preset-items/${id}/toggle`)
   }
 }

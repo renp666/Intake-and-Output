@@ -21,11 +21,11 @@ export interface Shift {
 
 export const configApi = {
   getSystemConfig() {
-    return api.get<any, SystemConfig[]>('/config/system')
+    return api.get<any, SystemConfig[]>('/config')
   },
 
   updateSystemConfig(data: { key: string; value: string }) {
-    return api.put('/config/system', data)
+    return api.put('/config', { [data.key]: data.value })
   },
 
   getShifts() {

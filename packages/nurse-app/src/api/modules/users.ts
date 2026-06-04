@@ -16,7 +16,7 @@ export interface User {
 export interface UserListParams {
   page?: number
   pageSize?: number
-  keyword?: string
+  search?: string
   role?: 'admin' | 'nurse' | 'all'
   departmentId?: number
   status?: 'active' | 'inactive' | 'all'
@@ -52,7 +52,7 @@ export const usersApi = {
     return api.post(`/users/${id}/reset-password`, data)
   },
 
-  toggleStatus(id: number) {
-    return api.post(`/users/${id}/toggle-status`)
+  toggleStatus(id: number, isActive: boolean) {
+    return api.put(`/users/${id}`, { isActive })
   }
 }

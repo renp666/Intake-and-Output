@@ -236,7 +236,7 @@ const loadData = async () => {
     const res = await usersApi.list({
       page: pagination.page,
       pageSize: pagination.pageSize,
-      keyword: filters.keyword || undefined,
+      search: filters.keyword || undefined,
       role: filters.role as any || undefined,
       departmentId: filters.departmentId || undefined
     })
@@ -299,7 +299,7 @@ const handleSubmit = async () => {
 
 const handleToggleStatus = async (user: User) => {
   try {
-    await usersApi.toggleStatus(user.id)
+    await usersApi.toggleStatus(user.id, !(user as any).isActive)
     message.success('操作成功')
     loadData()
   } catch (error: any) {

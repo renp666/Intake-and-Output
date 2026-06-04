@@ -263,6 +263,46 @@ router.get('/', asyncHandler(async (req: Request, res: Response) => {
 }));
 
 /**
+ * GET /today-summary - Get today's intake/output summary
+ */
+router.get('/today-summary', asyncHandler(async (req: Request, res: Response) => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const records = await prisma.intakeOutputRecord.findMany({
+    where: {
+      isDeleted: false,
+      confirmedAt: { not: null },
+      recordTime: { gte: today },
+    },
+    select: { recordType: true, amount: true },
+  });
+
+  let intake = 0;
+  let output = 0;
+  for (const r of records) {
+    if (r.recordType === 'intake') intake += r.amount;
+    else output += r.amount;
+  }
+
+  return res.json(success({ intake, output }));
+}));
+
+/**
+ * GET /pending-count - Get pending records count
+ */
+router.get('/pending-count', auth, asyncHandler(async (req: Request, res: Response) => {
+  const count = await prisma.intakeOutputRecord.count({
+    where: {
+      isDeleted: false,
+      confirmedAt: null,
+    },
+  });
+
+  return res.json(success({ count }));
+}));
+
+/**
  * GET /:id - Get single record
  */
 router.get('/:id', auth, asyncHandler(async (req: Request, res: Response) => {

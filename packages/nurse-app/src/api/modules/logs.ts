@@ -17,9 +17,10 @@ export interface LogListParams {
   page?: number
   pageSize?: number
   userId?: number
-  action?: string
-  startTime?: string
-  endTime?: string
+  operationType?: string
+  startDate?: string
+  endDate?: string
+  search?: string
 }
 
 export interface LogListResponse {

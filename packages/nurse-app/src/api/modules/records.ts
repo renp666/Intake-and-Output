@@ -27,12 +27,12 @@ export interface RecordListParams {
   page?: number
   pageSize?: number
   patientId?: number
-  bedId?: number
-  type?: 'intake' | 'output' | 'all'
-  status?: 'pending' | 'confirmed' | 'deleted' | 'all'
-  startTime?: string
-  endTime?: string
-  keyword?: string
+  bedNumber?: string
+  recordType?: 'intake' | 'output'
+  status?: 'pending' | 'confirmed' | 'deleted'
+  startDate?: string
+  endDate?: string
+  search?: string
 }
 
 export interface RecordListResponse {
@@ -49,9 +49,37 @@ export interface RecordHistory {
   createdAt: string
 }
 
+function mapRecordFromApi(raw: any): IntakeOutputRecord {
+  return {
+    id: raw.id,
+    patientId: raw.patientId,
+    patientName: raw.patient?.name || '',
+    hospitalNumber: raw.hospitalNumber,
+    bedId: null,
+    bedNumber: raw.bedNumber,
+    type: raw.recordType,
+    itemId: 0,
+    itemName: raw.itemName,
+    amount: raw.amount,
+    unit: raw.unit,
+    recordTime: raw.recordTime,
+    status: raw.isDeleted ? 'deleted' : (raw.confirmedAt ? 'confirmed' : 'pending'),
+    confirmedBy: raw.confirmer?.name || null,
+    confirmedAt: raw.confirmedAt || null,
+    operatorName: raw.recorder?.name || '',
+    notes: raw.notes || null,
+    departmentId: 0,
+    createdAt: raw.createdAt,
+    updatedAt: raw.updatedAt
+  }
+}
+
 export const recordsApi = {
   list(params?: RecordListParams) {
-    return api.get<any, RecordListResponse>('/records', { params })
+    return api.get<any, RecordListResponse>('/records', { params }).then((res: any) => ({
+      items: (res.items || []).map(mapRecordFromApi),
+      total: res.total || 0
+    }))
   },
 
   getById(id: number) {
@@ -71,19 +99,19 @@ export const recordsApi = {
   },
 
   confirm(id: number, data: { operatorName: string }) {
-    return api.post(`/records/${id}/confirm`, data)
+    return api.post(`/records/${id}/confirm`, { operator_name: data.operatorName })
   },
 
   batchConfirm(ids: number[], data: { operatorName: string }) {
-    return api.post('/records/batch-confirm', { ids, ...data })
+    return api.post('/records/batch-confirm', { ids, operator_name: data.operatorName })
   },
 
-  unconfirm(id: number) {
-    return api.post(`/records/${id}/unconfirm`)
+  unconfirm(id: number, data?: { operatorName: string }) {
+    return api.post(`/records/${id}/unconfirm`, data ? { operator_name: data.operatorName } : {})
   },
 
-  restore(id: number) {
-    return api.post(`/records/${id}/restore`)
+  restore(id: number, data?: { operatorName: string }) {
+    return api.post(`/records/${id}/restore`, data ? { operator_name: data.operatorName } : {})
   },
 
   getHistory(id: number) {

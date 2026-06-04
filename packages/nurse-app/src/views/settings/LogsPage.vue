@@ -106,8 +106,8 @@ const loadData = async () => {
     }
 
     if (filters.timeRange) {
-      params.startTime = new Date(filters.timeRange[0]).toISOString()
-      params.endTime = new Date(filters.timeRange[1]).toISOString()
+      params.startDate = new Date(filters.timeRange[0]).toISOString()
+      params.endDate = new Date(filters.timeRange[1]).toISOString()
     }
 
     const res = await logsApi.list(params)

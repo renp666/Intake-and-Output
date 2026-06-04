@@ -7,7 +7,7 @@
         </n-form-item>
         <n-form-item label="床位">
           <n-select
-            v-model:value="filters.bedId"
+            v-model:value="filters.bedNumber"
             :options="bedOptions"
             placeholder="选择床位"
             clearable
@@ -97,7 +97,7 @@ const bedOptions = ref<Array<{ label: string; value: number }>>([])
 
 const filters = reactive({
   keyword: '',
-  bedId: null as number | null,
+  bedNumber: null as string | null,
   type: null as string | null,
   status: null as string | null,
   timeRange: null as [number, number] | null
@@ -240,15 +240,15 @@ const loadData = async () => {
     const params: any = {
       page: pagination.page,
       pageSize: pagination.pageSize,
-      keyword: filters.keyword || undefined,
-      bedId: filters.bedId || undefined,
-      type: filters.type || undefined,
+      search: filters.keyword || undefined,
+      bedNumber: filters.bedNumber || undefined,
+      recordType: filters.type || undefined,
       status: filters.status || undefined
     }
 
     if (filters.timeRange) {
-      params.startTime = new Date(filters.timeRange[0]).toISOString()
-      params.endTime = new Date(filters.timeRange[1]).toISOString()
+      params.startDate = new Date(filters.timeRange[0]).toISOString()
+      params.endDate = new Date(filters.timeRange[1]).toISOString()
     }
 
     const res = await recordsApi.list(params)
@@ -266,7 +266,7 @@ const loadBeds = async () => {
     const res = await bedsApi.list({ pageSize: 100 })
     bedOptions.value = (res.items || []).map((bed: any) => ({
       label: `${bed.number}${bed.patientName ? ` (${bed.patientName})` : ''}`,
-      value: bed.id
+      value: bed.number
     }))
   } catch (error) {
     // ignore
@@ -275,7 +275,7 @@ const loadBeds = async () => {
 
 const resetFilters = () => {
   filters.keyword = ''
-  filters.bedId = null
+  filters.bedNumber = null
   filters.type = null
   filters.status = null
   filters.timeRange = null

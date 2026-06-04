@@ -26,7 +26,14 @@ const app = express();
 
 // 信任反向代理（Nginx/负载均衡）的 X-Forwarded-* 头
 // 生产环境通常在反代后面，需要信任 1 层代理
-app.set('trust proxy', process.env.TRUST_PROXY || 1);
+const trustProxy = process.env.TRUST_PROXY;
+if (trustProxy === 'false' || trustProxy === '0') {
+  app.set('trust proxy', false);
+} else if (trustProxy) {
+  app.set('trust proxy', trustProxy);
+} else {
+  app.set('trust proxy', 1);
+}
 
 // Middleware
 app.use(cors({

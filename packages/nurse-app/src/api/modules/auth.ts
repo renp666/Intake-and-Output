@@ -34,6 +34,6 @@ export const authApi = {
   },
 
   changePassword(data: { oldPassword: string; newPassword: string }) {
-    return api.post('/auth/change-password', data)
+    return api.put('/auth/password', data)
   }
 }

@@ -3,8 +3,8 @@ import api from '../index'
 export const exportApi = {
   exportExcel(params: {
     patientId?: number
-    startTime?: string
-    endTime?: string
+    startDate?: string
+    endDate?: string
     type?: 'daily' | 'custom' | 'shift'
   }) {
     return api.get('/export/excel', {
@@ -15,8 +15,8 @@ export const exportApi = {
 
   exportPdf(params: {
     patientId?: number
-    startTime?: string
-    endTime?: string
+    startDate?: string
+    endDate?: string
     type?: 'daily' | 'custom' | 'shift'
   }) {
     return api.get('/export/pdf', {

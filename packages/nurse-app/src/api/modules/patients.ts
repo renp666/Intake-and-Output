@@ -43,17 +43,17 @@ export interface PatientListResponse {
 export const patientsApi = {
   list(params?: PatientListParams) {
     return api.get('/patients', { params: buildPatientListParams(params) }).then((res: any) => ({
-      items: (res.data?.items || []).map(mapPatient),
-      total: res.data?.total || 0
+      items: (res?.items || []).map(mapPatient),
+      total: res?.total || 0
     }))
   },
 
   getById(id: string) {
-    return api.get(`/patients/${id}`).then((res: any) => mapPatient(res.data))
+    return api.get(`/patients/${id}`).then((res: any) => mapPatient(res))
   },
 
   getByHospitalNumber(hospitalNumber: string) {
-    return api.get(`/patients/by-hospital-number/${hospitalNumber}`).then((res: any) => mapPatient(res.data))
+    return api.get(`/patients/by-hospital-number/${hospitalNumber}`).then((res: any) => mapPatient(res))
   },
 
   create(data: Partial<Patient>) {
@@ -63,7 +63,7 @@ export const patientsApi = {
       admissionDate: data.admissionDate,
       doctorName: data.doctorName,
       notes: data.notes || undefined
-    })).then((res: any) => mapPatient(res.data))
+    })).then((res: any) => mapPatient(res))
   },
 
   update(id: string, data: Partial<Patient>) {
@@ -73,7 +73,7 @@ export const patientsApi = {
       admissionDate: data.admissionDate,
       doctorName: data.doctorName,
       notes: data.notes || undefined
-    })).then((res: any) => mapPatient(res.data))
+    })).then((res: any) => mapPatient(res))
   },
 
   delete(id: string) {

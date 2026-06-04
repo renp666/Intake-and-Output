@@ -63,11 +63,11 @@ export const alertsApi = {
   },
 
   markAsRead(id: number) {
-    return api.post(`/alerts/${id}/read`)
+    return api.put(`/alerts/${id}/read`)
   },
 
   handle(id: number, data: { operatorName: string; note: string }) {
-    return api.post(`/alerts/${id}/handle`, data)
+    return api.put(`/alerts/${id}/handle`, { handleNotes: data.note })
   },
 
   getConfig() {

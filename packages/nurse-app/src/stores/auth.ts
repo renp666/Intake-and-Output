@@ -25,10 +25,10 @@ export const useAuthStore = defineStore('auth', () => {
 
   const login = async (params: LoginParams) => {
     const res = await authApi.login(params)
-    token.value = res.data.token
-    user.value = res.data.user
-    localStorage.setItem('token', res.data.token)
-    localStorage.setItem('user', JSON.stringify(res.data.user))
+    token.value = res.token
+    user.value = res.user
+    localStorage.setItem('token', res.token)
+    localStorage.setItem('user', JSON.stringify(res.user))
     return res
   }
 
@@ -49,9 +49,9 @@ export const useAuthStore = defineStore('auth', () => {
   const fetchCurrentUser = async () => {
     try {
       const res = await authApi.getCurrentUser()
-      user.value = res.data as UserInfo
-      localStorage.setItem('user', JSON.stringify(res.data))
-      return res.data
+      user.value = res as UserInfo
+      localStorage.setItem('user', JSON.stringify(res))
+      return res
     } catch (e) {
       throw e
     }

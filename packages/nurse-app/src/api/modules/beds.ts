@@ -32,27 +32,27 @@ export interface BedListResponse {
 export const bedsApi = {
   list(params?: BedListParams) {
     return api.get('/beds', { params }).then((res: any) => ({
-      items: (res.data?.items || []).map(mapBed),
-      total: res.data?.total || 0
+      items: (res?.items || []).map(mapBed),
+      total: res?.total || 0
     }))
   },
 
   getById(id: string) {
-    return api.get(`/beds/${id}`).then((res: any) => mapBed(res.data))
+    return api.get(`/beds/${id}`).then((res: any) => mapBed(res))
   },
 
   create(data: Partial<Bed>) {
     return api.post('/beds', buildCreateBedPayload({
       number: data.number || '',
       departmentId: data.departmentId || ''
-    })).then((res: any) => mapBed(res.data))
+    })).then((res: any) => mapBed(res))
   },
 
   update(id: string, data: Partial<Bed>) {
     return api.put(`/beds/${id}`, buildUpdateBedPayload({
       number: data.number,
       departmentId: data.departmentId
-    })).then((res: any) => mapBed(res.data))
+    })).then((res: any) => mapBed(res))
   },
 
   delete(id: string) {

@@ -262,7 +262,7 @@ const loadData = async () => {
 const loadDepartments = async () => {
   try {
     const res: any = await departmentsApi.list()
-    const departments = res.data || []
+    const departments = Array.isArray(res) ? res : []
 
     departmentOptions.value = departments.map((department: any) => ({
       label: department.name,

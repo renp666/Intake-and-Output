@@ -31,6 +31,10 @@ api.interceptors.request.use(
 
 api.interceptors.response.use(
   (response: AxiosResponse) => {
+    // 后端统一返回 { code, message, data }，解包取 data
+    if (response.data && response.data.data !== undefined) {
+      return response.data.data
+    }
     return response.data
   },
   (error) => {
