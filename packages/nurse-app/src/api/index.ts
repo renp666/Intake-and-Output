@@ -1,6 +1,12 @@
 import axios, { type AxiosResponse, type InternalAxiosRequestConfig } from 'axios'
-import { useMessage } from 'naive-ui'
 import router from '@/router'
+
+export interface ApiResponse<T = any> {
+  code: number
+  message: string
+  data: T
+  total?: number
+}
 
 const api = axios.create({
   baseURL: '/api',

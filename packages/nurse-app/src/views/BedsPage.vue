@@ -270,11 +270,11 @@ const loadDepartments = async () => {
     }))
 
     if (!formData.departmentId) {
-      formData.departmentId = authStore.user?.departmentId || departmentOptions.value[0]?.value || ''
+      formData.departmentId = String(authStore.user?.departmentId || departmentOptions.value[0]?.value || '')
     }
 
     if (!editFormData.departmentId) {
-      editFormData.departmentId = authStore.user?.departmentId || departmentOptions.value[0]?.value || ''
+      editFormData.departmentId = String(authStore.user?.departmentId || departmentOptions.value[0]?.value || '')
     }
   } catch (error: any) {
     message.error(error.message || '加载科室失败')
@@ -287,7 +287,7 @@ const openAddModal = async () => {
   }
 
   formData.number = ''
-  formData.departmentId = authStore.user?.departmentId || departmentOptions.value[0]?.value || ''
+  formData.departmentId = String(authStore.user?.departmentId || departmentOptions.value[0]?.value || '')
   showAddModal.value = true
 }
 
@@ -304,7 +304,7 @@ const handleSubmit = async () => {
     message.success('添加成功')
     showAddModal.value = false
     formData.number = ''
-    formData.departmentId = authStore.user?.departmentId || departmentOptions.value[0]?.value || ''
+    formData.departmentId = String(authStore.user?.departmentId || departmentOptions.value[0]?.value || '')
     loadData()
   } catch (error: any) {
     message.error(error.message || '添加失败')

@@ -1,4 +1,5 @@
 import api from '../index'
+import type { ApiResponse } from '../index'
 
 export interface LoginParams {
   username: string
@@ -21,7 +22,7 @@ export interface LoginResponse {
 
 export const authApi = {
   login(data: LoginParams) {
-    return api.post<any, LoginResponse>('/auth/login', data)
+    return api.post<any, ApiResponse<LoginResponse>>('/auth/login', data)
   },
 
   logout() {
@@ -29,7 +30,7 @@ export const authApi = {
   },
 
   getCurrentUser() {
-    return api.get<any, UserInfo>('/auth/me')
+    return api.get<any, ApiResponse<UserInfo>>('/auth/me')
   },
 
   changePassword(data: { oldPassword: string; newPassword: string }) {

@@ -173,7 +173,11 @@ const handleSubmit = async () => {
 
   submitting.value = true
   try {
-    await departmentsApi.create(formData)
+    await departmentsApi.create({
+      name: formData.name,
+      code: formData.code,
+      status: formData.status as 'active' | 'inactive'
+    })
     message.success('添加成功')
     showAddModal.value = false
     formData.name = ''
@@ -204,7 +208,11 @@ const handleEditSubmit = async () => {
 
   submitting.value = true
   try {
-    await departmentsApi.update(editFormData.id, editFormData)
+    await departmentsApi.update(editFormData.id, {
+      name: editFormData.name,
+      code: editFormData.code,
+      status: editFormData.status as 'active' | 'inactive'
+    })
     message.success('更新成功')
     showEditModal.value = false
     loadData()

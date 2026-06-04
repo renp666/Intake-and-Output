@@ -83,7 +83,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, h } from 'vue'
+import { ref, reactive, onMounted, h, type VNode } from 'vue'
 import { useMessage, NButton, NTag, NSpace, NPopconfirm } from 'naive-ui'
 import type { DataTableColumns, PaginationProps } from 'naive-ui'
 import { recordsApi, type IntakeOutputRecord, type RecordHistory } from '@/api/modules/records'
@@ -109,7 +109,7 @@ const pagination = reactive<PaginationProps>({
   itemCount: 0,
   showSizePicker: true,
   pageSizes: [10, 20, 50, 100],
-  prefix: ({ itemCount }: { itemCount: number }) => `共 ${itemCount} 条`
+  prefix: (info: any) => `共 ${info?.itemCount ?? 0} 条`
 })
 
 const typeOptions = [
@@ -185,7 +185,7 @@ const columns: DataTableColumns<IntakeOutputRecord> = [
     width: 180,
     fixed: 'right',
     render: (row) => {
-      const buttons = []
+      const buttons: VNode[] = []
 
       if (row.status === 'pending') {
         buttons.push(
@@ -264,7 +264,7 @@ const loadData = async () => {
 const loadBeds = async () => {
   try {
     const res = await bedsApi.list({ pageSize: 100 })
-    bedOptions.value = (res.items || []).map(bed => ({
+    bedOptions.value = (res.items || []).map((bed: any) => ({
       label: `${bed.number}${bed.patientName ? ` (${bed.patientName})` : ''}`,
       value: bed.id
     }))

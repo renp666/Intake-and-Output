@@ -49,7 +49,7 @@ export const useAuthStore = defineStore('auth', () => {
   const fetchCurrentUser = async () => {
     try {
       const res = await authApi.getCurrentUser()
-      user.value = res.data
+      user.value = res.data as UserInfo
       localStorage.setItem('user', JSON.stringify(res.data))
       return res.data
     } catch (e) {

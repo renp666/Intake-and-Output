@@ -173,7 +173,6 @@ import { statisticsApi, type DailyStatistics } from '@/api/modules/statistics'
 import { patientsApi } from '@/api/modules/patients'
 import { bedsApi } from '@/api/modules/beds'
 import { configApi } from '@/api/modules/config'
-import { exportApi } from '@/api/modules/export'
 
 const message = useMessage()
 const loading = ref(false)
@@ -332,9 +331,9 @@ const loadData = async (showMissingTargetMessage = true) => {
 
 const updateCharts = () => {
   if (trendChart) {
-    const dates = statisticsData.value.map(item => item.date)
-    const intakeData = statisticsData.value.map(item => item.intake.total)
-    const outputData = statisticsData.value.map(item => item.output.total)
+    const dates = statisticsData.value.map((item: DailyStatistics) => item.date)
+    const intakeData = statisticsData.value.map((item: DailyStatistics) => item.intake.total)
+    const outputData = statisticsData.value.map((item: DailyStatistics) => item.output.total)
 
     trendChart.setOption({
       tooltip: {
@@ -424,12 +423,12 @@ const loadOptions = async () => {
       configApi.getShifts()
     ])
 
-    patientOptions.value = (patientsRes.items || []).map(p => ({
+    patientOptions.value = (patientsRes.items || []).map((p: any) => ({
       label: `${p.name} (${p.hospitalNumber})`,
       value: String(p.id)
     }))
 
-    bedOptions.value = (bedsRes.items || []).map(b => ({
+    bedOptions.value = (bedsRes.items || []).map((b: any) => ({
       label: b.number,
       value: b.number
     }))

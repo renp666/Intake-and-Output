@@ -137,7 +137,7 @@ const pagination = reactive<PaginationProps>({
   itemCount: 0,
   showSizePicker: true,
   pageSizes: [10, 20, 50, 100],
-  prefix: ({ itemCount }: { itemCount: number }) => `共 ${itemCount} 条`
+  prefix: (info: any) => `共 ${info?.itemCount ?? 0} 条`
 })
 
 const columns: DataTableColumns<User> = [
