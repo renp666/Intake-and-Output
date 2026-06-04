@@ -194,4 +194,57 @@ export const mockOperationLog = {
   ipAddress: '127.0.0.1',
   deviceFingerprint: null,
   createdAt: new Date(),
+  user: { id: 'user-1', username: 'nurse01', name: '张护士', role: 'nurse' },
+  patient: { id: 'patient-1', name: '李四', hospitalNumber: 'H20250001' },
+};
+
+export const mockAlertRecord = {
+  id: 'alert-1',
+  patientId: 'patient-1',
+  hospitalNumber: 'H20250001',
+  alertType: 'oliguria',
+  alertLevel: 'warning',
+  thresholdValue: 400,
+  actualValue: 200,
+  isRead: false,
+  readBy: null,
+  readAt: null,
+  handled: false,
+  handledBy: null,
+  handledAt: null,
+  handleNotes: null,
+  createdAt: new Date('2025-06-01T10:00:00Z'),
+  patient: { id: 'patient-1', name: '李四', hospitalNumber: 'H20250001', bedNumber: 'A001' },
+  reader: null,
+  handler: null,
+};
+
+export const mockReadAlert = {
+  ...mockAlertRecord,
+  id: 'alert-read',
+  isRead: true,
+  readBy: 'user-1',
+  readAt: new Date('2025-06-01T11:00:00Z'),
+};
+
+export const mockHandledAlert = {
+  ...mockAlertRecord,
+  id: 'alert-handled',
+  isRead: true,
+  handled: true,
+  handledBy: 'user-1',
+  handledAt: new Date('2025-06-01T12:00:00Z'),
+  handleNotes: '已处理',
+};
+
+export const mockShiftConfig = {
+  id: 'shift-1',
+  name: '白班',
+  startTime: '08:00',
+  endTime: '16:00',
+  isDefault: true,
+  createdBy: 'admin-1',
+  createdAt: new Date('2025-01-01'),
+  updatedAt: new Date('2025-01-01'),
+  user: { id: 'admin-1', name: '管理员' },
 };

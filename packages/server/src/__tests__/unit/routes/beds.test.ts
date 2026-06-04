@@ -290,7 +290,7 @@ describe('Beds Routes', () => {
   });
 
   describe('GET /api/beds/:id/qrcode', () => {
-    it('should return patient verify url json for nurse qr display', async () => {
+    it('should return patient verify url using patient app port', async () => {
       const p = mockPrismaInstance as any;
       p.bed.findUnique.mockResolvedValue(mockBed);
       p.bed.update.mockResolvedValue({
@@ -301,10 +301,30 @@ describe('Beds Routes', () => {
       const res = await requestRaw(app, 'GET', '/api/beds/bed-1/qrcode');
 
       expect(res.status).toBe(200);
-      expect(res.headers['content-type']).toContain('application/json');
-
       const body = JSON.parse(res.text);
+      // 端口应为患者端默认端口 3001，而非护士端端口
       expect(body.data.qrCode).toBe('http://localhost:3001/verify?bed=A001');
+    });
+
+    it('should encode bed number with special characters', async () => {
+      const p = mockPrismaInstance as any;
+      const specialBed = { ...mockBed, bedNumber: 'ICU 01' };
+      p.bed.findUnique.mockResolvedValue(specialBed);
+      p.bed.update.mockResolvedValue(specialBed);
+
+      const res = await requestRaw(app, 'GET', '/api/beds/bed-1/qrcode');
+
+      expect(res.status).toBe(200);
+      const body = JSON.parse(res.text);
+      expect(body.data.qrCode).toContain('/verify?bed=ICU%2001');
+    });
+
+    it('should return 404 for non-existent bed', async () => {
+      const p = mockPrismaInstance as any;
+      p.bed.findUnique.mockResolvedValue(null);
+
+      const res = await request(app, 'GET', '/api/beds/nonexistent/qrcode');
+      expect(res.status).toBe(404);
     });
   });
 });

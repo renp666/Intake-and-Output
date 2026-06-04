@@ -24,6 +24,10 @@ import voiceRoutes from './routes/voice';
 // Create Express app
 const app = express();
 
+// 信任反向代理（Nginx/负载均衡）的 X-Forwarded-* 头
+// 生产环境通常在反代后面，需要信任 1 层代理
+app.set('trust proxy', process.env.TRUST_PROXY || 1);
+
 // Middleware
 app.use(cors({
   origin: process.env.CORS_ORIGIN || '*',
@@ -104,8 +108,12 @@ const PORT = parseInt(process.env.PORT || '3000', 10);
 const HOST = process.env.HOST || '0.0.0.0';
 
 app.listen(PORT, HOST, () => {
-  console.log(`Server is running on http://${HOST}:${PORT}`);
-  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log('========================================');
+  console.log('[API服务] ✅ 启动成功');
+  console.log(`[API服务] 访问地址: http://${HOST}:${PORT}`);
+  console.log(`[API服务] 运行环境: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`[API服务] 健康检查: http://${HOST}:${PORT}/api/health`);
+  console.log('========================================');
 });
 
 export default app;

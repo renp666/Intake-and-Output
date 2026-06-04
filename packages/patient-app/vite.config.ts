@@ -10,6 +10,19 @@ export default defineConfig({
     Components({
       resolvers: [VantResolver()],
     }),
+    {
+      name: 'patient-app-banner',
+      configureServer(server) {
+        server.httpServer?.once('listening', () => {
+          const address = server.httpServer?.address()
+          const port = typeof address === 'object' ? address?.port : address
+          console.log('========================================');
+          console.log('[患者端] ✅ 启动成功');
+          console.log(`[患者端] 访问地址: http://localhost:${port}`);
+          console.log('========================================');
+        })
+      },
+    },
   ],
   resolve: {
     alias: {
@@ -17,6 +30,7 @@ export default defineConfig({
     },
   },
   server: {
+    host: '0.0.0.0',
     port: 3001,
     proxy: {
       '/api': {

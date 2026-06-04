@@ -5,6 +5,7 @@ import { success, error } from '../lib/response';
 import { auth, adminOnly, nurseOrAdmin } from '../middleware/auth';
 import { validate } from '../middleware/validate';
 import { asyncHandler } from '../index';
+import { buildPatientVerifyUrl } from '../lib/patient-url';
 
 const router = Router();
 
@@ -302,8 +303,15 @@ router.get('/:id/qrcode', asyncHandler(async (req: Request, res: Response) => {
     return res.status(404).json(error('Bed not found', 404));
   }
 
-  const baseUrl = process.env.PATIENT_APP_URL || 'http://localhost:3001';
-  const qrUrl = `${baseUrl}/verify?bed=${encodeURIComponent(bed.bedNumber)}`;
+  // #region debug-point qrcode-headers
+  console.log('[DEBUG qrcode] X-Forwarded-Host:', req.get('X-Forwarded-Host'));
+  console.log('[DEBUG qrcode] X-Forwarded-Proto:', req.get('X-Forwarded-Proto'));
+  console.log('[DEBUG qrcode] Host:', req.get('host'));
+  console.log('[DEBUG qrcode] hostname:', req.hostname);
+  console.log('[DEBUG qrcode] protocol:', req.protocol);
+  // #endregion
+
+  const qrUrl = buildPatientVerifyUrl(bed.bedNumber, req);
 
   // Update bed with QR code URL
   await prisma.bed.update({

@@ -395,19 +395,14 @@ const handleShowQRCode = async (bed: Bed) => {
   await nextTick()
 
   if (qrCodeCanvas.value) {
-    try {
-      const qrCodeData = await bedsApi.getQRCode(bed.id)
-      await QRCode.toCanvas(qrCodeCanvas.value, qrCodeData.qrCode, {
-        width: 256,
-        margin: 2
-      })
-    } catch (error) {
-      // Fallback: generate QR code with bed info
-      await QRCode.toCanvas(qrCodeCanvas.value, `bed:${bed.id}:${bed.number}`, {
-        width: 256,
-        margin: 2
-      })
-    }
+    // 直接用当前访问地址构建患者端 URL，确保局域网内扫码可访问
+    const hostname = window.location.hostname
+    const patientPort = import.meta.env.VITE_PATIENT_APP_PORT || '3001'
+    const qrUrl = `${window.location.protocol}//${hostname}:${patientPort}/verify?bed=${encodeURIComponent(bed.number)}`
+    await QRCode.toCanvas(qrCodeCanvas.value, qrUrl, {
+      width: 256,
+      margin: 2
+    })
   }
 }
 
