@@ -50,6 +50,7 @@ coverage/
 
 # Vite / Vite 本地配置
 *.local
+CLAUDE.md
 
 # TypeScript / TypeScript 构建信息
 *.tsbuildinfo
