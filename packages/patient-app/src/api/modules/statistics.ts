@@ -1,4 +1,5 @@
 import { http } from '../index'
+import { buildDailyStatsParams, mapDailyStatsResponse } from './statistics-transforms.js'
 
 export interface ProjectBreakdown {
   projectCode: string
@@ -39,7 +40,14 @@ export interface StatsQueryParams {
  * Get daily statistics for a patient
  */
 export function getDailyStats(patientId: string, params?: StatsQueryParams) {
-  return http.get<DailyStats>(`/statistics/patient/${patientId}/daily`, { params })
+  return http
+    .get('/statistics/daily', {
+      params: {
+        patientId,
+        ...buildDailyStatsParams(params),
+      },
+    })
+    .then((res: any) => mapDailyStatsResponse(res))
 }
 
 /**

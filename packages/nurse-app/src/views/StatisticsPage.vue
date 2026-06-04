@@ -30,7 +30,7 @@
         </n-form-item>
         <n-form-item label="床位">
           <n-select
-            v-model:value="filters.bedId"
+            v-model:value="filters.bedNumber"
             :options="bedOptions"
             placeholder="选择床位"
             clearable
@@ -181,9 +181,9 @@ const loading = ref(false)
 const filters = reactive({
   type: '24h' as string,
   timeRange: null as [number, number] | null,
-  patientId: null as number | null,
-  bedId: null as number | null,
-  shiftId: null as number | null
+  patientId: null as string | null,
+  bedNumber: null as string | null,
+  shiftId: null as string | null
 })
 
 const timeTypeOptions = [
@@ -191,9 +191,9 @@ const timeTypeOptions = [
   { label: '自定义', value: 'custom' }
 ]
 
-const patientOptions = ref<Array<{ label: string; value: number }>>([])
-const bedOptions = ref<Array<{ label: string; value: number }>>([])
-const shiftOptions = ref<Array<{ label: string; value: number }>>([])
+const patientOptions = ref<Array<{ label: string; value: string }>>([])
+const bedOptions = ref<Array<{ label: string; value: string }>>([])
+const shiftOptions = ref<Array<{ label: string; value: string }>>([])
 
 const statisticsData = ref<DailyStatistics[]>([])
 
@@ -247,26 +247,80 @@ const getPercentage = (value: number, total: number) => {
   return Math.round((value / total) * 100)
 }
 
-const loadData = async () => {
+function normalizeStatisticsData(data: any): DailyStatistics[] {
+  const stats = data?.stats
+  if (!stats) {
+    return []
+  }
+
+  const items = stats.items || {}
+  const date = data.endTime || data.endDate || new Date().toISOString()
+
+  return [
+    {
+      date: new Date(date).toLocaleString('zh-CN'),
+      patientId: filters.patientId,
+      patientName: '',
+      hospitalNumber: '',
+      bedNumber: filters.bedNumber || '',
+      intake: {
+        total: stats.intake || 0,
+        items: Object.entries(items)
+          .filter(([, value]: any) => value.intake > 0)
+          .map(([itemName, value]: [string, any]) => ({
+            itemId: itemName,
+            itemName,
+            amount: value.intake,
+            unit: 'ml',
+          })),
+      },
+      output: {
+        total: stats.output || 0,
+        items: Object.entries(items)
+          .filter(([, value]: any) => value.output > 0)
+          .map(([itemName, value]: [string, any]) => ({
+            itemId: itemName,
+            itemName,
+            amount: value.output,
+            unit: 'ml',
+          })),
+      },
+      balance: stats.balance || 0,
+      shiftSummaries: [],
+    },
+  ]
+}
+
+const loadData = async (showMissingTargetMessage = true) => {
+  if (!filters.patientId && !filters.bedNumber) {
+    statisticsData.value = []
+    await nextTick()
+    updateCharts()
+    if (showMissingTargetMessage) {
+      message.warning('请选择病人或床位')
+    }
+    return
+  }
+
   loading.value = true
   try {
     const params: any = {
       type: filters.type,
       patientId: filters.patientId || undefined,
-      bedId: filters.bedId || undefined,
+      bedNumber: filters.bedNumber || undefined,
       shiftId: filters.shiftId || undefined
     }
 
     if (filters.type === 'custom' && filters.timeRange) {
-      params.startTime = new Date(filters.timeRange[0]).toISOString()
-      params.endTime = new Date(filters.timeRange[1]).toISOString()
+      params.startDate = new Date(filters.timeRange[0]).toISOString()
+      params.endDate = new Date(filters.timeRange[1]).toISOString()
     }
 
     const data = filters.type === '24h'
       ? await statisticsApi.daily(params)
       : await statisticsApi.custom(params)
 
-    statisticsData.value = data || []
+    statisticsData.value = normalizeStatisticsData(data)
     await nextTick()
     updateCharts()
   } catch (error: any) {
@@ -372,17 +426,17 @@ const loadOptions = async () => {
 
     patientOptions.value = (patientsRes.items || []).map(p => ({
       label: `${p.name} (${p.hospitalNumber})`,
-      value: p.id
+      value: String(p.id)
     }))
 
     bedOptions.value = (bedsRes.items || []).map(b => ({
       label: b.number,
-      value: b.id
+      value: b.number
     }))
 
     shiftOptions.value = (shiftsRes || []).map(s => ({
       label: s.name,
-      value: s.id
+      value: String(s.id)
     }))
   } catch (error) {
     // ignore
@@ -395,13 +449,13 @@ const handleExport = async (format: 'excel' | 'pdf') => {
       format,
       type: filters.type,
       patientId: filters.patientId || undefined,
-      bedId: filters.bedId || undefined,
+      bedNumber: filters.bedNumber || undefined,
       shiftId: filters.shiftId || undefined
     }
 
     if (filters.type === 'custom' && filters.timeRange) {
-      params.startTime = new Date(filters.timeRange[0]).toISOString()
-      params.endTime = new Date(filters.timeRange[1]).toISOString()
+      params.startDate = new Date(filters.timeRange[0]).toISOString()
+      params.endDate = new Date(filters.timeRange[1]).toISOString()
     }
 
     const blob = await statisticsApi.exportData(params)
@@ -421,7 +475,7 @@ const handleExport = async (format: 'excel' | 'pdf') => {
 
 onMounted(() => {
   initCharts()
-  loadData()
+  loadData(false)
   loadOptions()
   window.addEventListener('resize', handleResize)
 })

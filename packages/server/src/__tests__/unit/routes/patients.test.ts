@@ -198,6 +198,27 @@ describe('Patients Routes', () => {
     });
   });
 
+  describe('GET /api/patients/bed/:bedNumber', () => {
+    it('should return active patient info by bed number for patient verification', async () => {
+      const p = mockPrismaInstance as any;
+      const patientOnBed = {
+        ...mockPatient,
+        beds: [{ ...mockBed, department: mockDepartment }],
+      };
+      p.patient.findFirst.mockResolvedValue(patientOnBed);
+
+      const res = await request(app, 'GET', '/api/patients/bed/A001');
+
+      expect(res.status).toBe(200);
+      expect(res.body.data).toMatchObject({
+        id: mockPatient.id,
+        name: mockPatient.name,
+        hospitalNumber: mockPatient.hospitalNumber,
+        bedNumber: mockPatient.bedNumber,
+      });
+    });
+  });
+
   describe('PUT /api/patients/:id', () => {
     it('should update patient', async () => {
       const p = mockPrismaInstance as any;

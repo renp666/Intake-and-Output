@@ -14,6 +14,8 @@ interface RecordStats {
     [key: string]: {
       intake: number;
       output: number;
+      intakeCount?: number;
+      outputCount?: number;
     };
   };
 }
@@ -22,13 +24,33 @@ interface RecordStats {
  * GET /daily - 24-hour statistics
  * Query params: patientId, bedNumber, type (rolling/cumulative)
  */
-router.get('/daily', auth, asyncHandler(async (req: Request, res: Response) => {
+router.get('/daily', asyncHandler(async (req: Request, res: Response) => {
   const patientId = req.query.patientId as string;
   const bedNumber = req.query.bedNumber as string;
   const type = req.query.type as string || 'rolling'; // rolling or cumulative
 
+  let userRole: string | undefined;
+  let departmentId: string | undefined;
+
+  const authHeader = req.headers.authorization;
+  if (authHeader) {
+    try {
+      const jwt = require('jsonwebtoken');
+      const token = authHeader.replace('Bearer ', '');
+      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key') as any;
+      userRole = decoded.role;
+      departmentId = decoded.departmentId;
+    } catch {
+      // Invalid token, proceed as patient query
+    }
+  }
+
   if (!patientId && !bedNumber) {
     return res.status(400).json(error('Patient ID or bed number is required', 400));
+  }
+
+  if (!userRole && !patientId) {
+    return res.status(401).json(error('Authentication required', 401));
   }
 
   // Build filter
@@ -44,9 +66,9 @@ router.get('/daily', auth, asyncHandler(async (req: Request, res: Response) => {
   }
 
   // Department filter for nurses
-  if (req.user!.role === 'nurse' && req.user!.departmentId) {
+  if (userRole === 'nurse' && departmentId) {
     const departmentBeds = await prisma.bed.findMany({
-      where: { departmentId: req.user!.departmentId },
+      where: { departmentId },
       select: { bedNumber: true },
     });
     const bedNumbers = departmentBeds.map((b: { bedNumber: string }) => b.bedNumber);
@@ -99,12 +121,14 @@ router.get('/daily', auth, asyncHandler(async (req: Request, res: Response) => {
 
     // Track by item
     if (!stats.items[record.itemName]) {
-      stats.items[record.itemName] = { intake: 0, output: 0 };
+      stats.items[record.itemName] = { intake: 0, output: 0, intakeCount: 0, outputCount: 0 };
     }
     if (record.recordType === 'intake') {
       stats.items[record.itemName].intake += record.amount;
+      stats.items[record.itemName].intakeCount += 1;
     } else {
       stats.items[record.itemName].output += record.amount;
+      stats.items[record.itemName].outputCount += 1;
     }
   }
 

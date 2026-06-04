@@ -1,4 +1,5 @@
 import { http } from '../index'
+import { buildPresetItemsParams, mapPresetItems } from './preset-items-transforms.js'
 
 export interface PresetItem {
   code: string
@@ -15,6 +16,8 @@ export interface PresetItem {
 /**
  * Get preset items for recording
  */
-export function getPresetItems() {
-  return http.get<PresetItem[]>('/config/preset-items')
+export function getPresetItems(type: 'intake' | 'output') {
+  return http
+    .get('/preset-items', { params: buildPresetItemsParams(type) })
+    .then((res: any) => mapPresetItems(res, type))
 }

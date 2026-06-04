@@ -1,6 +1,5 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
-import QRCode from 'qrcode';
 import { prisma } from '../lib/prisma';
 import { success, error } from '../lib/response';
 import { auth, adminOnly, nurseOrAdmin } from '../middleware/auth';
@@ -303,20 +302,8 @@ router.get('/:id/qrcode', asyncHandler(async (req: Request, res: Response) => {
     return res.status(404).json(error('Bed not found', 404));
   }
 
-  // Generate QR code URL for patient access
-  const baseUrl = process.env.PATIENT_APP_URL || 'http://localhost:5173';
-  const qrUrl = `${baseUrl}/records?bed=${bed.bedNumber}`;
-
-  // Generate QR code as PNG buffer
-  const qrBuffer = await QRCode.toBuffer(qrUrl, {
-    type: 'png',
-    width: 300,
-    margin: 2,
-    color: {
-      dark: '#000000',
-      light: '#ffffff',
-    },
-  });
+  const baseUrl = process.env.PATIENT_APP_URL || 'http://localhost:3001';
+  const qrUrl = `${baseUrl}/verify?bed=${encodeURIComponent(bed.bedNumber)}`;
 
   // Update bed with QR code URL
   await prisma.bed.update({
@@ -324,11 +311,9 @@ router.get('/:id/qrcode', asyncHandler(async (req: Request, res: Response) => {
     data: { qrcode: qrUrl },
   });
 
-  // Set response headers
-  res.setHeader('Content-Type', 'image/png');
-  res.setHeader('Content-Disposition', `inline; filename="bed-${bed.bedNumber}-qrcode.png"`);
-
-  return res.send(qrBuffer);
+  return res.json(success({
+    qrCode: qrUrl,
+  }));
 }));
 
 export default router;

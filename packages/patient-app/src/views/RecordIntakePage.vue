@@ -28,7 +28,7 @@
 
       <!-- Amount Input -->
       <div class="record-form__section">
-        <div class="record-form__label">摄入量 (ml)</div>
+        <div class="record-form__label">摄入量 ({{ currentUnit }})</div>
         <van-field
           v-model="form.amount"
           type="number"
@@ -38,7 +38,7 @@
           class="amount-input"
         >
           <template #button>
-            <span class="amount-input__unit">ml</span>
+            <span class="amount-input__unit">{{ currentUnit }}</span>
           </template>
         </van-field>
 
@@ -65,7 +65,7 @@
           />
           <div class="amount-stepper__display">
             {{ form.amount || 0 }}
-            <span class="amount-stepper__unit">ml</span>
+            <span class="amount-stepper__unit">{{ currentUnit }}</span>
           </div>
           <van-button size="large" icon="plus" @click="adjustAmount(50)" />
         </div>
@@ -132,21 +132,27 @@ import { useAuthStore } from '@/stores/auth'
 import { useRecordsStore } from '@/stores/records'
 import { getCurrentTime } from '@/utils/format'
 import { getDeviceId } from '@/utils/device'
+import { getPresetItems, type PresetItem } from '@/api/modules/config'
 
 const router = useRouter()
 const authStore = useAuthStore()
 const recordsStore = useRecordsStore()
 
 // Intake items
-const intakeItems = [
-  { code: 'water', name: '饮水', emoji: '💧' },
-  { code: 'soup', name: '汤类', emoji: '🍜' },
-  { code: 'milk', name: '牛奶', emoji: '🥛' },
-  { code: 'juice', name: '果汁', emoji: '🧃' },
-  { code: 'liquid', name: '流质', emoji: '🥤' },
-  { code: 'semi_liquid', name: '半流质', emoji: '🥣' },
-  { code: 'other_intake', name: '其他', emoji: '📦' },
+const fallbackIntakeItems: PresetItem[] = [
+  { code: 'water', name: '饮水', emoji: '💧', type: 'intake', unit: 'ml', sortOrder: 1, isActive: true },
+  { code: 'soup', name: '汤类', emoji: '🍜', type: 'intake', unit: 'ml', sortOrder: 2, isActive: true },
+  { code: 'milk', name: '牛奶', emoji: '🥛', type: 'intake', unit: 'ml', sortOrder: 3, isActive: true },
+  { code: 'juice', name: '果汁', emoji: '🧃', type: 'intake', unit: 'ml', sortOrder: 4, isActive: true },
+  { code: 'liquid', name: '流质', emoji: '🥤', type: 'intake', unit: 'ml', sortOrder: 5, isActive: true },
+  { code: 'semi_liquid', name: '半流质', emoji: '🥣', type: 'intake', unit: 'ml', sortOrder: 6, isActive: true },
+  { code: 'fruit', name: '水果', emoji: '🍎', type: 'intake', unit: 'g', sortOrder: 7, isActive: true },
+  { code: 'rice', name: '米饭', emoji: '🍚', type: 'intake', unit: 'g', sortOrder: 8, isActive: true },
+  { code: 'noodles', name: '粉面', emoji: '🍜', type: 'intake', unit: 'g', sortOrder: 9, isActive: true },
+  { code: 'steamed_buns', name: '包点', emoji: '🥟', type: 'intake', unit: 'g', sortOrder: 10, isActive: true },
+  { code: 'other_intake', name: '其他', emoji: '📦', type: 'intake', unit: 'ml', sortOrder: 999, isActive: true },
 ]
+const intakeItems = ref<PresetItem[]>([...fallbackIntakeItems])
 
 const quickAmounts = [100, 200, 250, 500]
 
@@ -165,6 +171,11 @@ const displayTime = ref(getCurrentTime())
 const saving = ref(false)
 
 // Computed
+const currentUnit = computed(() => {
+  const selectedItem = intakeItems.value.find(item => item.code === selectedProject.value)
+  return selectedItem?.unit || 'ml'
+})
+
 const canSave = computed(() => {
   return selectedProject.value && form.value.amount && Number(form.value.amount) > 0
 })
@@ -176,7 +187,19 @@ onMounted(() => {
     String(now.getHours()).padStart(2, '0'),
     String(now.getMinutes()).padStart(2, '0'),
   ]
+  loadPresetItems()
 })
+
+async function loadPresetItems() {
+  try {
+    const items = await getPresetItems('intake')
+    if (items?.length) {
+      intakeItems.value = items
+    }
+  } catch (error) {
+    console.error('Failed to load intake preset items:', error)
+  }
+}
 
 function selectProject(item: { code: string; name: string; emoji: string }) {
   selectedProject.value = item.code
@@ -218,7 +241,7 @@ async function handleSave() {
       projectName: form.value.projectName,
       projectCode: form.value.projectCode,
       amount: Number(form.value.amount),
-      unit: 'ml',
+      unit: currentUnit.value,
       recordTime: getRecordTime(),
       notes: form.value.notes || undefined,
       deviceId: getDeviceId(),

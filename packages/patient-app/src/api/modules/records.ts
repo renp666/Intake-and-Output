@@ -1,5 +1,10 @@
 import { http } from '../index'
-import type { PatientRecord, PaginatedResponse } from './patients'
+import {
+  buildCreateRecordPayload,
+  buildRecordListResponse,
+  buildUpdateRecordPayload,
+  mapRecord,
+} from './record-transforms.js'
 
 export interface CreateRecordPayload {
   patientId: string
@@ -38,28 +43,28 @@ export interface RecordsQueryParams {
  * Create a new record
  */
 export function createRecord(data: CreateRecordPayload) {
-  return http.post<PatientRecord>('/records', data)
+  return http.post('/records', buildCreateRecordPayload(data)).then((res: any) => mapRecord(res))
 }
 
 /**
  * Get records list with pagination
  */
 export function getRecords(params?: RecordsQueryParams) {
-  return http.get<PaginatedResponse<PatientRecord>>('/records', { params })
+  return http.get('/records', { params }).then((res: any) => buildRecordListResponse(res))
 }
 
 /**
  * Get single record by ID
  */
 export function getRecord(recordId: string) {
-  return http.get<PatientRecord>(`/records/${recordId}`)
+  return http.get(`/records/${recordId}`).then((res: any) => mapRecord(res))
 }
 
 /**
  * Update a record
  */
 export function updateRecord(recordId: string, data: UpdateRecordPayload) {
-  return http.put<PatientRecord>(`/records/${recordId}`, data)
+  return http.put(`/records/${recordId}`, buildUpdateRecordPayload(data)).then((res: any) => mapRecord(res))
 }
 
 /**
@@ -73,5 +78,5 @@ export function deleteRecord(recordId: string) {
  * Restore a deleted record
  */
 export function restoreRecord(recordId: string) {
-  return http.post<PatientRecord>(`/records/${recordId}/restore`)
+  return http.post(`/records/${recordId}/restore`).then((res: any) => mapRecord(res))
 }

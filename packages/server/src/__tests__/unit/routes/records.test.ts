@@ -232,6 +232,25 @@ describe('Records Routes', () => {
       const res = await request(app, 'GET', '/api/records');
       expect(res.status).toBe(401);
     });
+
+    it('should allow patients to query their own records without jwt', async () => {
+      const p = mockPrismaInstance as any;
+      p.intakeOutputRecord.findMany.mockResolvedValue([mockIntakeRecord]);
+      p.intakeOutputRecord.count.mockResolvedValue(1);
+
+      const res = await request(app, 'GET', '/api/records?patientId=patient-1&page=1&pageSize=20');
+
+      expect(res.status).toBe(200);
+      expect(res.body.data.items).toHaveLength(1);
+      expect(p.intakeOutputRecord.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            patientId: 'patient-1',
+            isDeleted: false,
+          }),
+        })
+      );
+    });
   });
 
   describe('PUT /api/records/:id', () => {
@@ -328,6 +347,21 @@ describe('Records Routes', () => {
       });
 
       expect(res.status).toBe(400);
+    });
+  });
+
+  describe('POST /api/records/:id/restore', () => {
+    it('should allow patients to restore their deleted record without jwt', async () => {
+      const p = mockPrismaInstance as any;
+      p.intakeOutputRecord.findUnique.mockResolvedValue(mockDeletedRecord);
+      p.intakeOutputRecord.update.mockResolvedValue(mockIntakeRecord);
+      p.recordChangeLog.create.mockResolvedValue({});
+      p.operationLog.create.mockResolvedValue({});
+
+      const res = await request(app, 'POST', '/api/records/record-deleted/restore');
+
+      expect(res.status).toBe(200);
+      expect(res.body.message).toBe('Record restored successfully');
     });
   });
 

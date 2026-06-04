@@ -1,6 +1,7 @@
 import axios from 'axios'
 import type { AxiosInstance, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios'
 import { showToast } from 'vant'
+import { unwrapApiResponse } from './response-helpers.js'
 
 // Create axios instance
 const instance: AxiosInstance = axios.create({
@@ -36,21 +37,7 @@ instance.interceptors.request.use(
 // Response interceptor
 instance.interceptors.response.use(
   (response: AxiosResponse) => {
-    const { data } = response
-
-    // Check if response has success field (API standard)
-    if (data && typeof data.success === 'boolean') {
-      if (data.success) {
-        return data.data !== undefined ? data.data : data
-      } else {
-        const message = data.error?.message || data.message || '请求失败'
-        showToast(message)
-        return Promise.reject(new Error(message))
-      }
-    }
-
-    // Direct data response
-    return data
+    return unwrapApiResponse(response.data)
   },
   (error) => {
     if (error.response) {

@@ -1,11 +1,16 @@
 import api from '../index'
+import {
+  buildCreateBedPayload,
+  buildUpdateBedPayload,
+  mapBed
+} from './bed-transforms.js'
 
 export interface Bed {
-  id: number
+  id: string
   number: string
-  departmentId: number
+  departmentId: string
   status: 'free' | 'occupied'
-  patientId: number | null
+  patientId: string | null
   patientName: string | null
   hospitalNumber: string | null
   createdAt: string
@@ -15,7 +20,7 @@ export interface Bed {
 export interface BedListParams {
   page?: number
   pageSize?: number
-  departmentId?: number
+  departmentId?: string
   status?: 'free' | 'occupied' | 'all'
 }
 
@@ -26,34 +31,43 @@ export interface BedListResponse {
 
 export const bedsApi = {
   list(params?: BedListParams) {
-    return api.get<any, BedListResponse>('/beds', { params })
+    return api.get('/beds', { params }).then((res: any) => ({
+      items: (res.data?.items || []).map(mapBed),
+      total: res.data?.total || 0
+    }))
   },
 
-  getById(id: number) {
-    return api.get<any, Bed>(`/beds/${id}`)
+  getById(id: string) {
+    return api.get(`/beds/${id}`).then((res: any) => mapBed(res.data))
   },
 
   create(data: Partial<Bed>) {
-    return api.post<any, Bed>('/beds', data)
+    return api.post('/beds', buildCreateBedPayload({
+      number: data.number || '',
+      departmentId: data.departmentId || ''
+    })).then((res: any) => mapBed(res.data))
   },
 
-  update(id: number, data: Partial<Bed>) {
-    return api.put<any, Bed>(`/beds/${id}`, data)
+  update(id: string, data: Partial<Bed>) {
+    return api.put(`/beds/${id}`, buildUpdateBedPayload({
+      number: data.number,
+      departmentId: data.departmentId
+    })).then((res: any) => mapBed(res.data))
   },
 
-  delete(id: number) {
+  delete(id: string) {
     return api.delete(`/beds/${id}`)
   },
 
-  bind(id: number, data: { patientId: number }) {
+  bind(id: string, data: { patientId: string }) {
     return api.post(`/beds/${id}/bind`, data)
   },
 
-  unbind(id: number) {
+  unbind(id: string) {
     return api.post(`/beds/${id}/unbind`)
   },
 
-  getQRCode(id: number) {
+  getQRCode(id: string) {
     return api.get<any, { qrCode: string }>(`/beds/${id}/qrcode`)
   }
 }

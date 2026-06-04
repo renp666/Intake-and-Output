@@ -22,6 +22,7 @@
         :collapsed-icon-size="20"
         :options="menuOptions"
         :value="activeMenu"
+        :expanded-keys="expandedMenuKeys"
         @update:value="handleMenuClick"
       />
     </n-layout-sider>
@@ -61,7 +62,7 @@
 
 <script setup lang="ts">
 import { h, computed } from 'vue'
-import { useRouter, useRoute, type RouteRecordRaw } from 'vue-router'
+import { useRouter, useRoute, RouterLink } from 'vue-router'
 import { NIcon } from 'naive-ui'
 import type { MenuOption, DropdownOption } from 'naive-ui'
 import {
@@ -80,6 +81,7 @@ import {
 } from '@vicons/antd'
 import { useAuthStore } from '@/stores/auth'
 import { useAppStore } from '@/stores/app'
+import { buildMenuOptions } from './menu-options.js'
 
 const router = useRouter()
 const route = useRoute()
@@ -90,80 +92,51 @@ const renderIcon = (icon: any) => {
   return () => h(NIcon, null, { default: () => h(icon) })
 }
 
-const menuOptions = computed<MenuOption[]>(() => {
-  const options: MenuOption[] = [
-    {
-      label: '首页',
-      key: '/dashboard',
-      icon: renderIcon(HomeOutlined)
-    },
-    {
-      label: '记录查询',
-      key: '/records',
-      icon: renderIcon(FileTextOutlined)
-    },
-    {
-      label: '病人管理',
-      key: '/patients',
-      icon: renderIcon(TeamOutlined)
-    },
-    {
-      label: '床位管理',
-      key: '/beds',
-      icon: renderIcon(MedicineBoxOutlined)
-    },
-    {
-      label: '统计',
-      key: '/statistics',
-      icon: renderIcon(BarChartOutlined)
-    }
-  ]
-
-  if (authStore.isAdmin) {
-    options.push({
-      label: '系统设置',
-      key: '/settings',
-      icon: renderIcon(SettingOutlined),
-      children: [
-        {
-          label: '科室管理',
-          key: '/settings/departments',
-          icon: renderIcon(ApartmentOutlined)
-        },
-        {
-          label: '用户管理',
-          key: '/settings/users',
-          icon: renderIcon(TeamOutlined)
-        },
-        {
-          label: '预设项目',
-          key: '/settings/preset-items',
-          icon: renderIcon(UnorderedListOutlined)
-        },
-        {
-          label: '系统配置',
-          key: '/settings/system',
-          icon: renderIcon(ToolOutlined)
-        },
-        {
-          label: '班次配置',
-          key: '/settings/shifts',
-          icon: renderIcon(ClockCircleOutlined)
-        },
-        {
-          label: '操作日志',
-          key: '/settings/logs',
-          icon: renderIcon(AuditOutlined)
+const renderMenuLabel = (label: string, key: string) => {
+  return () =>
+    h(
+      RouterLink,
+      {
+        to: key,
+        style: {
+          display: 'block',
+          width: '100%',
+          color: 'inherit',
+          textDecoration: 'none'
         }
-      ]
-    })
-  }
+      },
+      { default: () => label }
+    )
+}
 
-  return options
+const menuOptions = computed<MenuOption[]>(() => {
+  return buildMenuOptions({
+    isAdmin: authStore.isAdmin,
+    navigate: handleMenuClick,
+    renderIcon,
+    renderLabel: renderMenuLabel,
+    icons: {
+      HomeOutlined,
+      FileTextOutlined,
+      TeamOutlined,
+      MedicineBoxOutlined,
+      BarChartOutlined,
+      SettingOutlined,
+      ApartmentOutlined,
+      UnorderedListOutlined,
+      ToolOutlined,
+      ClockCircleOutlined,
+      AuditOutlined
+    }
+  }) as MenuOption[]
 })
 
 const activeMenu = computed(() => {
   return route.path
+})
+
+const expandedMenuKeys = computed(() => {
+  return route.path.startsWith('/settings') ? ['/settings'] : []
 })
 
 const breadcrumbs = computed(() => {

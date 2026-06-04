@@ -44,9 +44,9 @@
         <!-- Bristol Info -->
         <div v-if="form.bristolType" class="bristol-info">
           <template v-if="form.bristolType <= 4">
-            <van-notice-bar left-icon="info-o" color="#999" background="#F5F5F5">
+            <div class="bristol-notice">
               成形便不计入出量
-            </van-notice-bar>
+            </div>
           </template>
           <template v-else>
             <div class="bristol-weight">
@@ -178,6 +178,7 @@ import { useAuthStore } from '@/stores/auth'
 import { useRecordsStore } from '@/stores/records'
 import { getCurrentTime } from '@/utils/format'
 import { getDeviceId } from '@/utils/device'
+import { getPresetItems, type PresetItem } from '@/api/modules/config'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -186,12 +187,13 @@ const recordsStore = useRecordsStore()
 const romanNumerals = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII']
 
 // Output items
-const outputItems = [
-  { code: 'urine', name: '尿量', emoji: '💧' },
-  { code: 'stool', name: '大便', emoji: '💩' },
-  { code: 'vomit', name: '呕吐物', emoji: '🤢' },
-  { code: 'other_output', name: '其他', emoji: '📦' },
+const fallbackOutputItems: PresetItem[] = [
+  { code: 'urine', name: '尿量', emoji: '💧', type: 'output', unit: 'ml', sortOrder: 1, isActive: true },
+  { code: 'stool', name: '大便', emoji: '💩', type: 'output', unit: 'ml', sortOrder: 2, isActive: true },
+  { code: 'vomit', name: '呕吐物', emoji: '🤢', type: 'output', unit: 'ml', sortOrder: 3, isActive: true },
+  { code: 'other_output', name: '其他', emoji: '📦', type: 'output', unit: 'ml', sortOrder: 999, isActive: true },
 ]
+const outputItems = ref<PresetItem[]>([...fallbackOutputItems])
 
 // Bristol stool scale types
 const bristolTypes = [
@@ -280,7 +282,19 @@ onMounted(() => {
     String(now.getHours()).padStart(2, '0'),
     String(now.getMinutes()).padStart(2, '0'),
   ]
+  loadPresetItems()
 })
+
+async function loadPresetItems() {
+  try {
+    const items = await getPresetItems('output')
+    if (items?.length) {
+      outputItems.value = items
+    }
+  } catch (error) {
+    console.error('Failed to load output preset items:', error)
+  }
+}
 
 function selectProject(item: { code: string; name: string; emoji: string }) {
   selectedProject.value = item.code
@@ -471,6 +485,15 @@ function goBack() {
 
 .bristol-info {
   margin-top: 16px;
+}
+
+.bristol-notice {
+  background: #F5F5F5;
+  border-radius: 8px;
+  color: #666;
+  font-size: 14px;
+  line-height: 1.5;
+  padding: 12px 16px;
 }
 
 .bristol-weight {

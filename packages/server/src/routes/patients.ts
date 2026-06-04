@@ -266,6 +266,32 @@ router.get('/by-hospital-number/:number', asyncHandler(async (req: Request, res:
 }));
 
 /**
+ * GET /bed/:bedNumber - Find active patient by bed number
+ */
+router.get('/bed/:bedNumber', asyncHandler(async (req: Request, res: Response) => {
+  const patient = await prisma.patient.findFirst({
+    where: {
+      bedNumber: req.params.bedNumber,
+      status: 'active',
+    },
+    select: {
+      id: true,
+      name: true,
+      hospitalNumber: true,
+      bedNumber: true,
+      status: true,
+      admissionDate: true,
+    },
+  });
+
+  if (!patient) {
+    return res.status(404).json(error('Patient not found', 404));
+  }
+
+  return res.json(success(patient));
+}));
+
+/**
  * GET /:id/records - Get patient records
  */
 router.get('/:id/records', auth, asyncHandler(async (req: Request, res: Response) => {

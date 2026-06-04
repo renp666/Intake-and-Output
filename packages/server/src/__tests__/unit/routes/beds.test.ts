@@ -75,6 +75,36 @@ async function request(app: express.Application, method: string, path: string, o
   });
 }
 
+async function requestRaw(app: express.Application, method: string, path: string, options: {
+  body?: any;
+  headers?: Record<string, string>;
+} = {}) {
+  return new Promise<{ status: number; text: string; headers: Record<string, string> }>((resolve, reject) => {
+    const server = app.listen(0, () => {
+      const port = (server.address() as any).port;
+      const url = `http://localhost:${port}${path}`;
+      const fetchOptions: any = {
+        method: method.toUpperCase(),
+        headers: { 'Content-Type': 'application/json', ...options.headers },
+      };
+      if (options.body && method.toUpperCase() !== 'GET') {
+        fetchOptions.body = JSON.stringify(options.body);
+      }
+      fetch(url, fetchOptions)
+        .then(async (res) => {
+          const text = await res.text();
+          const headers: Record<string, string> = {};
+          res.headers.forEach((value, key) => {
+            headers[key] = value;
+          });
+          server.close();
+          resolve({ status: res.status, text, headers });
+        })
+        .catch((err) => { server.close(); reject(err); });
+    });
+  });
+}
+
 describe('Beds Routes', () => {
   let app: express.Application;
 
@@ -256,6 +286,25 @@ describe('Beds Routes', () => {
       });
 
       expect(res.status).toBe(404);
+    });
+  });
+
+  describe('GET /api/beds/:id/qrcode', () => {
+    it('should return patient verify url json for nurse qr display', async () => {
+      const p = mockPrismaInstance as any;
+      p.bed.findUnique.mockResolvedValue(mockBed);
+      p.bed.update.mockResolvedValue({
+        ...mockBed,
+        qrcode: 'http://localhost:3001/verify?bed=A001',
+      });
+
+      const res = await requestRaw(app, 'GET', '/api/beds/bed-1/qrcode');
+
+      expect(res.status).toBe(200);
+      expect(res.headers['content-type']).toContain('application/json');
+
+      const body = JSON.parse(res.text);
+      expect(body.data.qrCode).toBe('http://localhost:3001/verify?bed=A001');
     });
   });
 });

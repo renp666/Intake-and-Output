@@ -29,10 +29,27 @@ const updatePresetItemSchema = z.object({
 /**
  * GET / - List preset items (filter by type, permission)
  */
-router.get('/', auth, asyncHandler(async (req: Request, res: Response) => {
+router.get('/', asyncHandler(async (req: Request, res: Response) => {
   const type = req.query.type as string;
   const permission = req.query.permission as string;
   const includeInactive = req.query.includeInactive as string;
+  let userRole: string | undefined;
+
+  const authHeader = req.headers.authorization;
+  if (authHeader) {
+    try {
+      const jwt = require('jsonwebtoken');
+      const token = authHeader.replace('Bearer ', '');
+      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key') as any;
+      userRole = decoded.role;
+    } catch {
+      // Invalid token, proceed as patient query
+    }
+  }
+
+  if (!userRole && permission !== 'self') {
+    return res.status(401).json(error('Authentication required', 401));
+  }
 
   const where: any = {};
 

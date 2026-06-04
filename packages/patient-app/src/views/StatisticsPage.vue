@@ -120,7 +120,7 @@ import { ref, watch, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { getDailyStats } from '@/api/modules/statistics'
-import type { DailyStats, ProjectBreakdown } from '@/api/modules/statistics'
+import type { ProjectBreakdown } from '@/api/modules/statistics'
 
 const router = useRouter()
 const authStore = useAuthStore()

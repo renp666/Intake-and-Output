@@ -2,7 +2,7 @@
   <div class="beds-page">
     <n-card title="床位管理">
       <template #header-extra>
-        <n-button type="primary" @click="showAddModal = true">
+        <n-button v-if="authStore.isAdmin" type="primary" @click="openAddModal">
           添加床位
         </n-button>
       </template>
@@ -83,7 +83,7 @@
       </div>
     </n-card>
 
-    <n-modal v-model:visible="showAddModal" title="添加床位" style="width: 400px">
+    <n-modal v-model:show="showAddModal" preset="card" title="添加床位" style="width: 400px">
       <n-form
         ref="addFormRef"
         :model="formData"
@@ -94,6 +94,13 @@
         <n-form-item label="编号" path="number">
           <n-input v-model:value="formData.number" placeholder="请输入床位编号" />
         </n-form-item>
+        <n-form-item label="科室" path="departmentId">
+          <n-select
+            v-model:value="formData.departmentId"
+            :options="departmentOptions"
+            placeholder="请选择科室"
+          />
+        </n-form-item>
       </n-form>
       <template #footer>
         <n-space justify="end">
@@ -103,7 +110,7 @@
       </template>
     </n-modal>
 
-    <n-modal v-model:visible="showEditModal" title="编辑床位" style="width: 400px">
+    <n-modal v-model:show="showEditModal" preset="card" title="编辑床位" style="width: 400px">
       <n-form
         ref="editFormRef"
         :model="editFormData"
@@ -114,6 +121,13 @@
         <n-form-item label="编号" path="number">
           <n-input v-model:value="editFormData.number" placeholder="请输入床位编号" />
         </n-form-item>
+        <n-form-item label="科室" path="departmentId">
+          <n-select
+            v-model:value="editFormData.departmentId"
+            :options="departmentOptions"
+            placeholder="请选择科室"
+          />
+        </n-form-item>
       </n-form>
       <template #footer>
         <n-space justify="end">
@@ -123,7 +137,7 @@
       </template>
     </n-modal>
 
-    <n-modal v-model:visible="showBindModal" title="绑定病人" style="width: 500px">
+    <n-modal v-model:show="showBindModal" preset="card" title="绑定病人" style="width: 500px">
       <n-form label-placement="left" label-width="80">
         <n-form-item label="住院号">
           <n-input
@@ -160,7 +174,7 @@
       </template>
     </n-modal>
 
-    <n-modal v-model:visible="showQRCodeModal" title="床位二维码" style="width: 350px">
+    <n-modal v-model:show="showQRCodeModal" preset="card" title="床位二维码" style="width: 350px">
       <div style="text-align: center">
         <canvas ref="qrCodeCanvas"></canvas>
         <p style="margin-top: 16px">床位 {{ currentBed?.number }}</p>
@@ -175,11 +189,15 @@ import { useMessage, type FormInst, type FormRules } from 'naive-ui'
 import QRCode from 'qrcode'
 import { bedsApi, type Bed } from '@/api/modules/beds'
 import { patientsApi, type Patient } from '@/api/modules/patients'
+import { departmentsApi } from '@/api/modules/departments'
+import { useAuthStore } from '@/stores/auth'
 
 const message = useMessage()
+const authStore = useAuthStore()
 const loading = ref(false)
 const submitting = ref(false)
 const beds = ref<Bed[]>([])
+const departmentOptions = ref<Array<{ label: string; value: string }>>([])
 
 const filters = reactive({
   status: null as string | null
@@ -206,16 +224,19 @@ const qrCodeCanvas = ref<HTMLCanvasElement | null>(null)
 const currentBed = ref<Bed | null>(null)
 
 const formData = reactive({
-  number: ''
+  number: '',
+  departmentId: ''
 })
 
 const editFormData = reactive({
-  id: 0,
-  number: ''
+  id: '',
+  number: '',
+  departmentId: ''
 })
 
 const formRules: FormRules = {
-  number: [{ required: true, message: '请输入床位编号', trigger: 'blur' }]
+  number: [{ required: true, message: '请输入床位编号', trigger: 'blur' }],
+  departmentId: [{ required: true, message: '请选择科室', trigger: 'change' }]
 }
 
 const bindHospitalNumber = ref('')
@@ -238,6 +259,38 @@ const loadData = async () => {
   }
 }
 
+const loadDepartments = async () => {
+  try {
+    const res: any = await departmentsApi.list()
+    const departments = res.data || []
+
+    departmentOptions.value = departments.map((department: any) => ({
+      label: department.name,
+      value: department.id
+    }))
+
+    if (!formData.departmentId) {
+      formData.departmentId = authStore.user?.departmentId || departmentOptions.value[0]?.value || ''
+    }
+
+    if (!editFormData.departmentId) {
+      editFormData.departmentId = authStore.user?.departmentId || departmentOptions.value[0]?.value || ''
+    }
+  } catch (error: any) {
+    message.error(error.message || '加载科室失败')
+  }
+}
+
+const openAddModal = async () => {
+  if (departmentOptions.value.length === 0) {
+    await loadDepartments()
+  }
+
+  formData.number = ''
+  formData.departmentId = authStore.user?.departmentId || departmentOptions.value[0]?.value || ''
+  showAddModal.value = true
+}
+
 const handleSubmit = async () => {
   try {
     await addFormRef.value?.validate()
@@ -251,6 +304,7 @@ const handleSubmit = async () => {
     message.success('添加成功')
     showAddModal.value = false
     formData.number = ''
+    formData.departmentId = authStore.user?.departmentId || departmentOptions.value[0]?.value || ''
     loadData()
   } catch (error: any) {
     message.error(error.message || '添加失败')
@@ -263,6 +317,7 @@ const handleEdit = (bed: Bed) => {
   currentBed.value = bed
   editFormData.id = bed.id
   editFormData.number = bed.number
+  editFormData.departmentId = bed.departmentId
   showEditModal.value = true
 }
 
@@ -357,6 +412,7 @@ const handleShowQRCode = async (bed: Bed) => {
 }
 
 onMounted(() => {
+  loadDepartments()
   loadData()
 })
 </script>

@@ -136,7 +136,23 @@ router.post('/', asyncHandler(async (req: Request, res: Response) => {
 /**
  * GET / - List records with pagination and filtering
  */
-router.get('/', auth, asyncHandler(async (req: Request, res: Response) => {
+router.get('/', asyncHandler(async (req: Request, res: Response) => {
+  let userRole: string | undefined;
+  let departmentId: string | undefined;
+
+  const authHeader = req.headers.authorization;
+  if (authHeader) {
+    try {
+      const jwt = require('jsonwebtoken');
+      const token = authHeader.replace('Bearer ', '');
+      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key') as any;
+      userRole = decoded.role;
+      departmentId = decoded.departmentId;
+    } catch {
+      // Invalid token, proceed as patient query
+    }
+  }
+
   const page = parseInt(req.query.page as string) || 1;
   const pageSize = parseInt(req.query.pageSize as string) || 20;
   const patientId = req.query.patientId as string;
@@ -168,6 +184,10 @@ router.get('/', auth, asyncHandler(async (req: Request, res: Response) => {
     where.patientId = patientId;
   }
 
+  if (!userRole && !patientId) {
+    return res.status(401).json(error('Authentication required', 401));
+  }
+
   if (bedNumber) {
     where.bedNumber = bedNumber;
   }
@@ -194,9 +214,9 @@ router.get('/', auth, asyncHandler(async (req: Request, res: Response) => {
   }
 
   // Nurses can only see records in their department
-  if (req.user!.role === 'nurse' && req.user!.departmentId) {
+  if (userRole === 'nurse' && departmentId) {
     const departmentBeds = await prisma.bed.findMany({
-      where: { departmentId: req.user!.departmentId },
+      where: { departmentId },
       select: { bedNumber: true },
     });
     const bedNumbers = departmentBeds.map((b: { bedNumber: string }) => b.bedNumber);
@@ -452,7 +472,27 @@ router.delete('/:id', asyncHandler(async (req: Request, res: Response) => {
 /**
  * POST /:id/restore - Restore deleted record
  */
-router.post('/:id/restore', validate(operatorSchema), asyncHandler(async (req: Request, res: Response) => {
+router.post('/:id/restore', asyncHandler(async (req: Request, res: Response) => {
+  let userId: string | undefined;
+  let userRole: string | undefined;
+
+  const authHeader = req.headers.authorization;
+  if (authHeader) {
+    try {
+      const jwt = require('jsonwebtoken');
+      const token = authHeader.replace('Bearer ', '');
+      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key') as any;
+      userId = decoded.userId;
+      userRole = decoded.role;
+    } catch {
+      // Invalid token, proceed as patient
+    }
+  }
+
+  if (userRole === 'nurse' && !req.body?.operator_name) {
+    return res.status(400).json(error('Operator name is required for nurses', 400));
+  }
+
   const record = await prisma.intakeOutputRecord.findUnique({
     where: { id: req.params.id },
   });
@@ -482,20 +522,21 @@ router.post('/:id/restore', validate(operatorSchema), asyncHandler(async (req: R
       fieldName: 'isDeleted',
       oldValue: 'true',
       newValue: 'false',
-      changedBy: req.user!.userId,
+      changedBy: userId || null,
       changeType: 'restore',
     },
   });
 
   // Log operation
+  const operatorName = req.body?.operator_name || 'patient';
   await prisma.operationLog.create({
     data: {
-      userId: req.user!.userId,
+      userId: userId || null,
       patientId: record.patientId,
       operationType: 'restore',
       targetTable: 'intake_output_records',
       targetId: record.id,
-      detail: `Restored record: ${record.itemName} by ${req.body.operator_name}`,
+      detail: `Restored record: ${record.itemName} by ${operatorName}`,
     },
   });
 

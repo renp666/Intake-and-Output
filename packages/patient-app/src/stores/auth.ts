@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { verifyIdentity, getPatientByBed } from '@/api/modules/auth'
+import { getPatientByBed } from '@/api/modules/auth'
 import type { PatientInfo } from '@/api/modules/auth'
 import { getDeviceId } from '@/utils/device'
 

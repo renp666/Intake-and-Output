@@ -50,8 +50,12 @@ coverage/
 
 # Vite / Vite 本地配置
 *.local
-CLAUDE.md
 
+# Claude / Claude 代码规范
+CLAUDE.md
+.CLAUDE
+.mcp.json
+.gitignore.json
 # TypeScript / TypeScript 构建信息
 *.tsbuildinfo
 

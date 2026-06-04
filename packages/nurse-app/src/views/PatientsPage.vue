@@ -2,7 +2,7 @@
   <div class="patients-page">
     <n-card title="病人管理">
       <template #header-extra>
-        <n-button type="primary" @click="showAddModal = true">
+        <n-button type="primary" @click="openAddModal">
           添加病人
         </n-button>
       </template>
@@ -38,7 +38,7 @@
       />
     </n-card>
 
-    <n-modal v-model:visible="showAddModal" title="添加病人" style="width: 600px">
+    <n-modal v-model:show="showAddModal" preset="card" title="添加病人" style="width: 600px">
       <n-form
         ref="addFormRef"
         :model="formData"
@@ -82,7 +82,7 @@
       </template>
     </n-modal>
 
-    <n-modal v-model:visible="showEditModal" title="编辑病人" style="width: 600px">
+    <n-modal v-model:show="showEditModal" preset="card" title="编辑病人" style="width: 600px">
       <n-form
         ref="editFormRef"
         :model="editFormData"
@@ -240,7 +240,7 @@ const formData = reactive({
 })
 
 const editFormData = reactive({
-  id: 0,
+  id: '',
   hospitalNumber: '',
   name: '',
   gender: 'male' as 'male' | 'female',
@@ -253,12 +253,7 @@ const editFormData = reactive({
 
 const formRules: FormRules = {
   hospitalNumber: [{ required: true, message: '请输入住院号', trigger: 'blur' }],
-  name: [{ required: true, message: '请输入姓名', trigger: 'blur' }],
-  gender: [{ required: true, message: '请选择性别', trigger: 'change' }],
-  age: [{ required: true, type: 'number', message: '请输入年龄', trigger: 'blur' }],
-  admissionDate: [{ required: true, type: 'number', message: '请选择入院日期', trigger: 'change' }],
-  doctorName: [{ required: true, message: '请输入主治医生', trigger: 'blur' }],
-  diagnosis: [{ required: true, message: '请输入诊断', trigger: 'blur' }]
+  name: [{ required: true, message: '请输入姓名', trigger: 'blur' }]
 }
 
 const loadData = async () => {
@@ -312,6 +307,11 @@ const handleSubmit = async () => {
   } finally {
     submitting.value = false
   }
+}
+
+const openAddModal = () => {
+  resetForm()
+  showAddModal.value = true
 }
 
 const handleEdit = (patient: Patient) => {

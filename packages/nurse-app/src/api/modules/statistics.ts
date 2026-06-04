@@ -2,14 +2,14 @@ import api from '../index'
 
 export interface DailyStatistics {
   date: string
-  patientId: number
+  patientId: string | null
   patientName: string
   hospitalNumber: string
   bedNumber: string
   intake: {
     total: number
     items: Array<{
-      itemId: number
+      itemId: string
       itemName: string
       amount: number
       unit: string
@@ -18,7 +18,7 @@ export interface DailyStatistics {
   output: {
     total: number
     items: Array<{
-      itemId: number
+      itemId: string
       itemName: string
       amount: number
       unit: string
@@ -26,7 +26,7 @@ export interface DailyStatistics {
   }
   balance: number
   shiftSummaries: Array<{
-    shiftId: number
+    shiftId: string
     shiftName: string
     intake: number
     output: number
@@ -35,16 +35,16 @@ export interface DailyStatistics {
 }
 
 export interface StatisticsParams {
-  patientId?: number
-  bedId?: number
-  startTime?: string
-  endTime?: string
-  shiftId?: number
+  patientId?: string
+  bedNumber?: string
+  startDate?: string
+  endDate?: string
+  shiftId?: string
   type?: '24h' | 'custom'
 }
 
 export interface PatientStatistics {
-  patientId: number
+  patientId: string
   patientName: string
   hospitalNumber: string
   totalIntake: number
@@ -59,7 +59,7 @@ export interface PatientStatistics {
 }
 
 export interface ShiftStatistics {
-  shiftId: number
+  shiftId: string
   shiftName: string
   startTime: string
   endTime: string
@@ -67,7 +67,7 @@ export interface ShiftStatistics {
   output: number
   balance: number
   records: Array<{
-    itemId: number
+    itemId: string
     itemName: string
     type: 'intake' | 'output'
     amount: number
@@ -77,14 +77,14 @@ export interface ShiftStatistics {
 
 export const statisticsApi = {
   daily(params?: StatisticsParams) {
-    return api.get<any, DailyStatistics[]>('/statistics/daily', { params })
+    return api.get('/statistics/daily', { params })
   },
 
   custom(params?: StatisticsParams) {
-    return api.get<any, DailyStatistics[]>('/statistics/custom', { params })
+    return api.get('/statistics/custom', { params })
   },
 
-  patient(patientId: number, params?: Omit<StatisticsParams, 'patientId'>) {
+  patient(patientId: string, params?: Omit<StatisticsParams, 'patientId'>) {
     return api.get<any, PatientStatistics>(`/statistics/patient/${patientId}`, { params })
   },
 

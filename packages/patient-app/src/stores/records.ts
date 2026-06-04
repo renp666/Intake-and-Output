@@ -4,7 +4,7 @@ import { getRecords, createRecord, updateRecord, deleteRecord, restoreRecord } f
 import type { PatientRecord, PaginatedResponse } from '@/api/modules/patients'
 import type { CreateRecordPayload, UpdateRecordPayload, RecordsQueryParams } from '@/api/modules/records'
 import { useAuthStore } from './auth'
-import { isSameDay, getTodayRange } from '@/utils/format'
+import { isSameDay } from '@/utils/format'
 
 export const useRecordsStore = defineStore('patient-records', () => {
   // State

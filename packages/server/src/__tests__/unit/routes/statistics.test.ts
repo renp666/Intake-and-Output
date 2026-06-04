@@ -123,9 +123,27 @@ describe('Statistics Routes', () => {
       expect(res.body.message).toBe('Patient ID or bed number is required');
     });
 
-    it('should return 401 without auth', async () => {
-      const res = await request(app, 'GET', '/api/statistics/daily?patientId=patient-1');
+    it('should return 401 without auth when querying by bed number', async () => {
+      const res = await request(app, 'GET', '/api/statistics/daily?bedNumber=A001');
       expect(res.status).toBe(401);
+    });
+
+    it('should allow patient-side daily statistics query without jwt when patientId is provided', async () => {
+      const p = mockPrismaInstance as any;
+      p.intakeOutputRecord.findMany.mockResolvedValue([
+        { recordType: 'intake', itemName: '饮水', amount: 200, confirmedAt: new Date() },
+        { recordType: 'intake', itemName: '饮水', amount: 100, confirmedAt: new Date() },
+        { recordType: 'output', itemName: '尿量', amount: 150, confirmedAt: new Date() },
+      ]);
+
+      const res = await request(app, 'GET', '/api/statistics/daily?patientId=patient-1&type=rolling', {
+        headers: { authorization: 'Bearer bed-A001-device' },
+      });
+
+      expect(res.status).toBe(200);
+      expect(res.body.data.stats.items['饮水'].intake).toBe(300);
+      expect(res.body.data.stats.items['饮水'].intakeCount).toBe(2);
+      expect(res.body.data.stats.items['尿量'].outputCount).toBe(1);
     });
 
     it('should handle empty record set', async () => {
